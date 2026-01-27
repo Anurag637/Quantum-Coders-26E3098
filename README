@@ -38,37 +38,60 @@ Each block represents a real production concern in modern AI serving platforms.
 ---
 
 ## System Architecture Diagram (Conceptual)
-graph LR
-    A["📱 Client<br/>⬤ Waiting"] --> B["🌐 Gateway<br/>⬤ Processing"]
-    B --> C["🔍 Validation<br/>⬤ Checking"]
-    C --> D["💾 Cache<br/>⬤ Querying"]
-    
-    D -- "✅ Hit" --> E["⚡ Response<br/>⬤ Immediate"]
-    E --> Z["✅ Client<br/>⬤ Delivered"]
-    
-    D -- "⚠️ Miss" --> F["🤖 Router<br/>⬤ Analyzing"]
-    F --> G["🎭 GPT<br/>⬤ Generating"]
-    F --> H["📊 BERT<br/>⬤ Classifying"]
-    F --> I["⚡ vLLM<br/>⬤ Processing"]
-    
-    G & H & I --> J["🔄 Processor<br/>⬤ Formatting"]
-    J --> K["💾 Cache<br/>⬤ Storing"]
-    K --> L["📊 Monitor<br/>⬤ Logging"]
-    L --> Z
-    
-    style A fill:#F5F5F5,stroke:#666,stroke-width:2px
-    style B fill:#FFF0F5,stroke:#FF1493,stroke-width:3px
-    style C fill:#FFFACD,stroke:#FFD700,stroke-width:2px
-    style D fill:#F0FFF0,stroke:#32CD32,stroke-width:2px
-    style E fill:#F0FFFF,stroke:#00CED1,stroke-width:2px
-    style F fill:#F0F8FF,stroke:#1E90FF,stroke-width:3px
-    style G fill:#F0FFF0,stroke:#228B22,stroke-width:2px
-    style H fill:#F0F8FF,stroke:#4169E1,stroke-width:2px
-    style I fill:#FFE4E1,stroke:#FF6347,stroke-width:2px
-    style J fill:#FFFAF0,stroke:#FFA500,stroke-width:2px
-    style K fill:#F8F8FF,stroke:#696969,stroke-width:2px
-    style L fill:#FFFAFA,stroke:#FF4500,stroke-width:2px
-    style Z fill:#F0FFF0,stroke:#32CD32,stroke-width:2px
+
+```
+┌──────────┐
+│  Client  │
+└────┬─────┘
+     │ Request
+     ▼
+┌──────────────┐
+│ FastAPI API  │
+│   Gateway    │
+└────┬─────────┘
+     │
+     ▼
+┌──────────────────┐
+│ Request Validation│
+└────┬─────────────┘
+     │
+     ▼
+┌──────────────┐      Cache Hit ───────────┐
+│ Cache Layer  │ ─────────────────────────▶│
+│ (PostgreSQL) │      Cache Miss            │
+└────┬─────────┘                             │
+     │                                       │
+     ▼                                       │
+┌────────────────────┐                       │
+│ Prompt Router &    │                       │
+│ Load Balancer      │                       │
+└────┬───────────────┘                       │
+     │                                       │
+ ┌───┼───────────┐                           │
+ │   │           │                           │
+ ▼   ▼           ▼                           │
+GPT Backend  BERT Backend   vLLM Backend     │
+ │             │              │              │
+ └───────┬─────┴──────┬───────┘              │
+         ▼             ▼                     │
+      Model Inference Execution              │
+         │                                   │
+         ▼                                   │
+┌──────────────────┐                         │
+│ Response Handler │◀────────────────────────
+└────┬─────────────┘
+     │
+     ▼
+┌──────────────────┐
+│ Cache Update     │
+└────┬─────────────┘
+     │
+     ▼
+┌──────────┐
+│  Client  │
+└──────────┘
+```
+
 ---
 
 ## Detailed Workflow Explanation
