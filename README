@@ -1,0 +1,196 @@
+# LLM Inference Gateway and Prompt Router
+
+## Overview
+
+This project is a **functional replication of modern Large Language Model (LLM) serving systems**. It exposes the internal workflow of real-world inference platforms that are usually hidden behind black-box APIs. The system is designed for learning-by-building and focuses on **systems-level understanding** rather than only model usage.
+
+The gateway handles request validation, caching, intelligent routing, model execution, fault tolerance, and monitoring while supporting multiple model backends.
+
+---
+
+## High-Level System Idea (Visual Concept)
+
+Think of the system as a smart traffic controller between users and AI models.
+
+```
+Client
+  │
+  ▼
+FastAPI Inference Gateway
+  │
+  ├── Request Validation
+  ├── Cache Lookup
+  ├── Prompt Router & Load Balancer
+  │       ├── GPT-style Backend
+  │       ├── BERT-style Backend
+  │       └── vLLM Backend
+  │
+  ├── Response Processing
+  ├── Cache Update
+  └── Monitoring & Logging
+  │
+  ▼
+Response to Client
+```
+
+Each block represents a real production concern in modern AI serving platforms.
+
+---
+
+## System Architecture Diagram (Conceptual)
+
+```
+┌──────────┐
+│  Client  │
+└────┬─────┘
+     │ Request
+     ▼
+┌──────────────┐
+│ FastAPI API  │
+│   Gateway    │
+└────┬─────────┘
+     │
+     ▼
+┌──────────────────┐
+│ Request Validation│
+└────┬─────────────┘
+     │
+     ▼
+┌──────────────┐      Cache Hit ───────────┐
+│ Cache Layer  │ ─────────────────────────▶│
+│ (PostgreSQL) │      Cache Miss            │
+└────┬─────────┘                             │
+     │                                       │
+     ▼                                       │
+┌────────────────────┐                       │
+│ Prompt Router &    │                       │
+│ Load Balancer      │                       │
+└────┬───────────────┘                       │
+     │                                       │
+ ┌───┼───────────┐                           │
+ │   │           │                           │
+ ▼   ▼           ▼                           │
+GPT Backend  BERT Backend   vLLM Backend     │
+ │             │              │             │
+ └───────┬─────┴──────┬───────┘             │
+         ▼             ▼                     │
+      Model Inference Execution               │
+         │                                   │
+         ▼                                   │
+┌──────────────────┐                         │
+│ Response Handler │◀────────────────────────┘
+└────┬─────────────┘
+     │
+     ▼
+┌──────────────────┐
+│ Cache Update     │
+└────┬─────────────┘
+     │
+     ▼
+┌──────────┐
+│  Client  │
+└──────────┘
+```
+
+---
+
+## Detailed Workflow Explanation
+
+### 1. Entry and Validation Phase
+
+The workflow starts when a client sends an inference request to the FastAPI gateway. The gateway acts as the single entry point for all traffic. Before any model execution occurs, the request is validated to ensure:
+
+* The prompt is well-formed
+* Token limits are respected
+* Model parameters are safe
+
+This protects expensive compute resources and mirrors real production safeguards.
+
+---
+
+### 2. Caching Strategy
+
+After validation, the system checks whether an identical request has already been processed.
+
+* A cache key is generated from the prompt and parameters
+* PostgreSQL is queried for a stored response
+
+If a cache hit occurs, the response is returned immediately without invoking any model. This dramatically reduces latency and cost.
+
+---
+
+### 3. Intelligent Routing and Model Execution
+
+If no cached response is found, the request is passed to the **Prompt Router and Load Balancer**.
+
+The router analyzes the request and selects the most appropriate backend:
+
+* **GPT-style backend** for general text generation
+* **BERT-style backend** for classification or embeddings
+* **vLLM backend** for high-throughput, low-latency inference
+
+The selected backend performs model inference and returns raw output to the gateway.
+
+---
+
+### 4. Post-Processing and Response Delivery
+
+The gateway processes the raw model output by formatting or filtering it as required. The response is then:
+
+* Stored in the cache for future reuse
+* Logged for observability
+* Returned to the client
+
+This completes the request lifecycle.
+
+---
+
+### 5. Monitoring and Observability
+
+Monitoring and logging are active throughout the entire pipeline. The system tracks:
+
+* Request latency
+* Cache hit and miss rates
+* Backend selection
+* Error and failure events
+
+These signals allow developers and students to understand system behavior under normal and failure conditions.
+
+---
+
+## Technology Stack
+
+* **FastAPI** for the inference gateway
+* **PyTorch** for model execution
+* **Hugging Face Transformers** for baseline models
+* **vLLM** for optimized, high-throughput inference
+* **PostgreSQL** for caching and logs
+
+---
+
+## Educational Value
+
+This project helps learners understand:
+
+* How real LLM serving systems are structured
+* Why routing and caching matter
+* How performance and reliability are engineered
+* How AI systems behave under load and failure
+
+It bridges the gap between theoretical ML usage and production-grade AI infrastructure.
+
+---
+
+## Possible Extensions
+
+* Replace PostgreSQL cache with Redis
+* Add token-level streaming responses
+* Introduce authentication and rate limiting
+* Add Prometheus and Grafana dashboards
+* Implement auto-scaling for model backends
+
+---
+
+## Conclusion
+
+This project is not just an API wrapper. It is a **transparent, inspectable, and extensible reproduction of modern LLM inference systems**, designed to teach how large-scale AI services actually work in practice.
