@@ -71,14 +71,14 @@ Each block represents a real production concern in modern AI serving platforms.
  │   │           │                           │
  ▼   ▼           ▼                           │
 GPT Backend  BERT Backend   vLLM Backend     │
- │             │              │             │
- └───────┬─────┴──────┬───────┘             │
+ │             │              │              │
+ └───────┬─────┴──────┬───────┘              │
          ▼             ▼                     │
-      Model Inference Execution               │
+      Model Inference Execution              │
          │                                   │
          ▼                                   │
 ┌──────────────────┐                         │
-│ Response Handler │◀────────────────────────┘
+│ Response Handler │◀────────────────────────
 └────┬─────────────┘
      │
      ▼
