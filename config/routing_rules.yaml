@@ -1,0 +1,707 @@
+# ============================================================================
+# LLM INFERENCE GATEWAY - ROUTING RULES CONFIGURATION
+# ============================================================================
+# Version: 1.0.0
+# Last Updated: 2024
+#
+# This file defines the intelligent routing logic for the LLM Gateway.
+# Rules are evaluated in order of priority (higher = more important).
+# First matching rule determines the model selection.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# GLOBAL ROUTING SETTINGS
+# ----------------------------------------------------------------------------
+settings:
+  # Default strategy when no rule matches
+  default_strategy: "hybrid"
+  
+  # Cache routing decisions to improve performance
+  cache_decisions: true
+  decision_cache_ttl: 3600  # 1 hour
+  
+  # Enable fallback chains
+  enable_fallbacks: true
+  
+  # Minimum confidence score to use routing decision
+  min_confidence: 0.6
+  
+  # Maximum number of alternative models to consider
+  max_alternatives: 3
+  
+  # Routing weights for hybrid strategy
+  hybrid_weights:
+    latency: 0.4
+    cost: 0.3
+    quality: 0.3
+
+
+# ----------------------------------------------------------------------------
+# ENTERPRISE & PREMIUM TIER RULES (Priority: 1000-900)
+# ----------------------------------------------------------------------------
+# These rules take precedence for enterprise and premium users.
+# Priority 1000 = Highest importance
+# ----------------------------------------------------------------------------
+
+- name: "enterprise_code_review"
+  description: "Enterprise users get GPT-4 for complex code review tasks"
+  priority: 1000
+  enabled: true
+  conditions:
+    - field: "user_tier"
+      operator: "eq"
+      value: "enterprise"
+    - field: "prompt_type"
+      operator: "eq"
+      value: "code"
+    - field: "complexity"
+      operator: "gte"
+      value: 0.7
+    - field: "requires_reasoning"
+      operator: "eq"
+      value: true
+  action:
+    primary_model: "gpt-4"
+    fallback_model: "claude-3-sonnet"
+    secondary_fallback: "grok-beta"
+    routing_strategy: "quality"
+    confidence_boost: 0.2
+  reason: "Enterprise code review requires highest quality reasoning"
+
+- name: "premium_coding"
+  description: "Premium users get Grok for code generation"
+  priority: 950
+  enabled: true
+  conditions:
+    - field: "user_tier"
+      operator: "eq"
+      value: "pro"
+    - field: "prompt_type"
+      operator: "eq"
+      value: "code"
+    - field: "complexity"
+      operator: "gte"
+      value: 0.5
+  action:
+    primary_model: "grok-beta"
+    fallback_model: "starcoder2-7b"
+    secondary_fallback: "deepseek-coder-6.7b"
+    routing_strategy: "hybrid"
+    confidence_boost: 0.1
+  reason: "Premium code generation optimized for speed and cost"
+
+- name: "enterprise_creative"
+  description: "Enterprise users get Claude for creative writing"
+  priority: 900
+  enabled: true
+  conditions:
+    - field: "user_tier"
+      operator: "eq"
+      value: "enterprise"
+    - field: "prompt_type"
+      operator: "eq"
+      value: "creative"
+  action:
+    primary_model: "claude-3-sonnet"
+    fallback_model: "claude-3-haiku"
+    secondary_fallback: "gpt-4"
+    routing_strategy: "quality"
+  reason: "Enterprise creative tasks use Claude for superior narrative quality"
+
+
+# ----------------------------------------------------------------------------
+# PRODUCTION CRITICAL RULES (Priority: 899-800)
+# ----------------------------------------------------------------------------
+# Rules for production-critical workloads that need guaranteed performance.
+# ----------------------------------------------------------------------------
+
+- name: "production_high_volume"
+  description: "High-volume production workloads use cost-optimized routing"
+  priority: 850
+  enabled: true
+  conditions:
+    - field: "environment"
+      operator: "eq"
+      value: "production"
+    - field: "workload_type"
+      operator: "eq"
+      value: "high_volume"
+  action:
+    primary_model: "gpt-3.5-turbo"
+    fallback_model: "claude-3-haiku"
+    secondary_fallback: "mistral-7b-instruct"
+    routing_strategy: "cost"
+  reason: "High-volume production workloads optimized for cost"
+
+- name: "production_latency_sensitive"
+  description: "Latency-sensitive production workloads"
+  priority: 800
+  enabled: true
+  conditions:
+    - field: "environment"
+      operator: "eq"
+      value: "production"
+    - field: "requires_speed"
+      operator: "eq"
+      value: true
+  action:
+    primary_model: "gpt-3.5-turbo"
+    fallback_model: "claude-3-haiku"
+    secondary_fallback: "tinyllama-1.1b"
+    routing_strategy: "latency"
+  reason: "Latency-sensitive workloads use fastest available models"
+
+
+# ----------------------------------------------------------------------------
+# TASK-SPECIFIC RULES (Priority: 799-600)
+# ----------------------------------------------------------------------------
+# Rules for specific task types like code, math, translation, etc.
+# ----------------------------------------------------------------------------
+
+- name: "code_generation"
+  description: "Route code generation to specialized code models"
+  priority: 750
+  enabled: true
+  conditions:
+    - field: "prompt_type"
+      operator: "eq"
+      value: "code"
+    - field: "complexity"
+      operator: "lte"
+      value: 0.6
+  action:
+    primary_model: "starcoder2-7b"
+    fallback_model: "deepseek-coder-6.7b"
+    secondary_fallback: "grok-beta"
+    routing_strategy: "hybrid"
+  reason: "Code generation uses specialized code models for better accuracy"
+
+- name: "complex_algorithm"
+  description: "Complex algorithm implementation"
+  priority: 700
+  enabled: true
+  conditions:
+    - field: "prompt_type"
+      operator: "eq"
+      value: "code"
+    - field: "complexity"
+      operator: "gte"
+      value: 0.7
+    - field: "contains_keywords"
+      operator: "in"
+      value: ["algorithm", "optimization", "complexity", "data structure"]
+  action:
+    primary_model: "gpt-4"
+    fallback_model: "claude-3-sonnet"
+    secondary_fallback: "grok-beta"
+    routing_strategy: "quality"
+  reason: "Complex algorithms require advanced reasoning capabilities"
+
+- name: "mathematical_reasoning"
+  description: "Mathematical problem solving"
+  priority: 680
+  enabled: true
+  conditions:
+    - field: "prompt_type"
+      operator: "eq"
+      value: "reasoning"
+    - field: "contains_keywords"
+      operator: "in"
+      value: ["math", "equation", "calculate", "solve", "formula"]
+  action:
+    primary_model: "gpt-4"
+    fallback_model: "claude-3-sonnet"
+    secondary_fallback: "phi-2"
+    routing_strategy: "quality"
+  reason: "Mathematical reasoning requires strong analytical capabilities"
+
+- name: "translation"
+  description: "Language translation tasks"
+  priority: 650
+  enabled: true
+  conditions:
+    - field: "prompt_type"
+      operator: "eq"
+      value: "translation"
+  action:
+    primary_model: "qwen2-7b"
+    fallback_model: "gpt-4"
+    secondary_fallback: "claude-3-haiku"
+    routing_strategy: "hybrid"
+  reason: "Translation tasks route to multilingual-optimized models"
+
+- name: "summarization"
+  description: "Document summarization"
+  priority: 620
+  enabled: true
+  conditions:
+    - field: "prompt_type"
+      operator: "eq"
+      value: "summarization"
+    - field: "prompt_length"
+      operator: "gte"
+      value: 500
+  action:
+    primary_model: "claude-3-haiku"
+    fallback_model: "gpt-3.5-turbo-16k"
+    secondary_fallback: "zephyr-7b"
+    routing_strategy: "cost"
+  reason: "Long document summarization uses models with large context windows"
+
+- name: "creative_writing"
+  description: "Creative and narrative writing"
+  priority: 600
+  enabled: true
+  conditions:
+    - field: "prompt_type"
+      operator: "eq"
+      value: "creative"
+    - field: "sentiment"
+      operator: "eq"
+      value: "positive"
+  action:
+    primary_model: "claude-3-haiku"
+    fallback_model: "zephyr-7b"
+    secondary_fallback: "openchat-3.5"
+    routing_strategy: "quality"
+  reason: "Creative writing benefits from fine-tuned chat models"
+
+
+# ----------------------------------------------------------------------------
+# PERFORMANCE-BASED RULES (Priority: 599-400)
+# ----------------------------------------------------------------------------
+# Rules based on latency, cost, and quality requirements.
+# ----------------------------------------------------------------------------
+
+- name: "ultra_low_latency"
+  description: "Ultra-low latency requirements (under 200ms)"
+  priority: 550
+  enabled: true
+  conditions:
+    - field: "max_latency_ms"
+      operator: "lt"
+      value: 200
+  action:
+    primary_model: "tinyllama-1.1b"
+    fallback_model: "phi-2"
+    secondary_fallback: "gpt-3.5-turbo"
+    routing_strategy: "latency"
+  reason: "Ultra-low latency requires lightweight local models"
+
+- name: "low_latency"
+  description: "Low latency requirements (200-500ms)"
+  priority: 500
+  enabled: true
+  conditions:
+    - field: "max_latency_ms"
+      operator: "between"
+      min: 200
+      max: 500
+  action:
+    primary_model: "phi-2"
+    fallback_model: "gpt-3.5-turbo"
+    secondary_fallback: "claude-3-haiku"
+    routing_strategy: "latency"
+  reason: "Low latency requirements use fast models with good quality"
+
+- name: "cost_sensitive"
+  description: "Cost-sensitive workloads"
+  priority: 450
+  enabled: true
+  conditions:
+    - field: "max_cost_usd"
+      operator: "lt"
+      value: 0.0005
+  action:
+    primary_model: "mistral-7b-instruct"
+    fallback_model: "phi-2"
+    secondary_fallback: "tinyllama-1.1b"
+    routing_strategy: "cost"
+  reason: "Cost-sensitive workloads use free or low-cost models"
+
+- name: "quality_critical"
+  description: "Quality-critical tasks with no budget constraints"
+  priority: 400
+  enabled: true
+  conditions:
+    - field: "min_quality_score"
+      operator: "gte"
+      value: 0.9
+  action:
+    primary_model: "gpt-4"
+    fallback_model: "claude-3-sonnet"
+    secondary_fallback: "claude-3-opus"
+    routing_strategy: "quality"
+  reason: "Quality-critical tasks use the most capable models"
+
+
+# ----------------------------------------------------------------------------
+# USER TIER & ACCESS RULES (Priority: 399-300)
+# ----------------------------------------------------------------------------
+# Rules based on user authentication and subscription tier.
+# ----------------------------------------------------------------------------
+
+- name: "free_tier_simple_qa"
+  description: "Free tier users get efficient models for simple Q&A"
+  priority: 350
+  enabled: true
+  conditions:
+    - field: "user_tier"
+      operator: "eq"
+      value: "free"
+    - field: "prompt_type"
+      operator: "eq"
+      value: "qa"
+    - field: "complexity"
+      operator: "lt"
+      value: 0.4
+  action:
+    primary_model: "tinyllama-1.1b"
+    fallback_model: "phi-2"
+    secondary_fallback: "mistral-7b"
+    routing_strategy: "cost"
+  reason: "Free tier Q&A uses efficient local models"
+
+- name: "free_tier_general"
+  description: "Free tier users get balanced models for general tasks"
+  priority: 300
+  enabled: true
+  conditions:
+    - field: "user_tier"
+      operator: "eq"
+      value: "free"
+    - field: "prompt_type"
+      operator: "neq"
+      value: "code"
+  action:
+    primary_model: "mistral-7b-instruct"
+    fallback_model: "zephyr-7b"
+    secondary_fallback: "llama-3.1-8b-instant"
+    routing_strategy: "hybrid"
+  reason: "Free tier general tasks use capable open-source models"
+
+
+# ----------------------------------------------------------------------------
+# CONTENT-BASED RULES (Priority: 299-200)
+# ----------------------------------------------------------------------------
+# Rules based on specific content, entities, or keywords.
+# ----------------------------------------------------------------------------
+
+- name: "python_specialist"
+  description: "Python-specific programming questions"
+  priority: 250
+  enabled: true
+  conditions:
+    - field: "prompt_type"
+      operator: "eq"
+      value: "code"
+    - field: "contains_entities"
+      operator: "in"
+      value: ["python"]
+  action:
+    primary_model: "deepseek-coder-6.7b"
+    fallback_model: "starcoder2-7b"
+    secondary_fallback: "grok-beta"
+    routing_strategy: "quality"
+  reason: "Python-specific questions use models with strong Python training"
+
+- name: "javascript_framework"
+  description: "JavaScript/TypeScript and framework questions"
+  priority: 240
+  enabled: true
+  conditions:
+    - field: "prompt_type"
+      operator: "eq"
+      value: "code"
+    - field: "contains_entities"
+      operator: "in"
+      value: ["javascript", "typescript", "react", "vue", "angular", "node"]
+  action:
+    primary_model: "starcoder2-7b"
+    fallback_model: "grok-beta"
+    secondary_fallback: "gpt-4"
+    routing_strategy: "hybrid"
+  reason: "JavaScript/framework questions route to models with strong web dev training"
+
+- name: "database_queries"
+  description: "SQL and database query optimization"
+  priority: 230
+  enabled: true
+  conditions:
+    - field: "contains_keywords"
+      operator: "in"
+      value: ["sql", "query", "database", "postgresql", "mysql", "mongodb"]
+    - field: "prompt_type"
+      operator: "eq"
+      value: "code"
+  action:
+    primary_model: "gpt-4"
+    fallback_model: "claude-3-sonnet"
+    secondary_fallback: "grok-beta"
+    routing_strategy: "quality"
+  reason: "Complex database queries require strong reasoning capabilities"
+
+- name: "security_analysis"
+  description: "Security and vulnerability analysis"
+  priority: 220
+  enabled: true
+  conditions:
+    - field: "contains_keywords"
+      operator: "in"
+      value: ["security", "vulnerability", "exploit", "cve", "penetration", "xss", "sql injection"]
+  action:
+    primary_model: "gpt-4"
+    fallback_model: "claude-3-sonnet"
+    secondary_fallback: "grok-beta"
+    routing_strategy: "quality"
+  reason: "Security analysis requires up-to-date knowledge and strong reasoning"
+
+- name: "academic_research"
+  description: "Academic and research-oriented questions"
+  priority: 210
+  enabled: true
+  conditions:
+    - field: "contains_keywords"
+      operator: "in"
+      value: ["research", "paper", "publication", "citation", "thesis", "academic"]
+  action:
+    primary_model: "claude-3-sonnet"
+    fallback_model: "gpt-4"
+    secondary_fallback: "zephyr-7b"
+    routing_strategy: "quality"
+  reason: "Academic research uses models with broad knowledge and citations"
+
+
+# ----------------------------------------------------------------------------
+# LANGUAGE-SPECIFIC RULES (Priority: 199-100)
+# ----------------------------------------------------------------------------
+# Rules for non-English language processing.
+# ----------------------------------------------------------------------------
+
+- name: "chinese_language"
+  description: "Chinese language prompts"
+  priority: 150
+  enabled: true
+  conditions:
+    - field: "language"
+      operator: "eq"
+      value: "zh"
+  action:
+    primary_model: "qwen2-7b"
+    fallback_model: "gpt-4"
+    secondary_fallback: "claude-3-sonnet"
+    routing_strategy: "quality"
+  reason: "Chinese language tasks use Qwen2 for optimal multilingual performance"
+
+- name: "japanese_language"
+  description: "Japanese language prompts"
+  priority: 140
+  enabled: true
+  conditions:
+    - field: "language"
+      operator: "eq"
+      value: "ja"
+  action:
+    primary_model: "qwen2-7b"
+    fallback_model: "gpt-4"
+    secondary_fallback: "claude-3-haiku"
+    routing_strategy: "quality"
+  reason: "Japanese language tasks use multilingual models with strong Japanese support"
+
+- name: "spanish_language"
+  description: "Spanish language prompts"
+  priority: 130
+  enabled: true
+  conditions:
+    - field: "language"
+      operator: "eq"
+      value: "es"
+  action:
+    primary_model: "qwen2-7b"
+    fallback_model: "gpt-4"
+    secondary_fallback: "claude-3-haiku"
+    routing_strategy: "hybrid"
+  reason: "Spanish language tasks route to multilingual-optimized models"
+
+- name: "french_language"
+  description: "French language prompts"
+  priority: 120
+  enabled: true
+  conditions:
+    - field: "language"
+      operator: "eq"
+      value: "fr"
+  action:
+    primary_model: "qwen2-7b"
+    fallback_model: "gpt-4"
+    secondary_fallback: "claude-3-haiku"
+    routing_strategy: "hybrid"
+  reason: "French language tasks route to multilingual-optimized models"
+
+- name: "german_language"
+  description: "German language prompts"
+  priority: 110
+  enabled: true
+  conditions:
+    - field: "language"
+      operator: "eq"
+      value: "de"
+  action:
+    primary_model: "qwen2-7b"
+    fallback_model: "gpt-4"
+    secondary_fallback: "claude-3-haiku"
+    routing_strategy: "hybrid"
+  reason: "German language tasks route to multilingual-optimized models"
+
+
+# ----------------------------------------------------------------------------
+# FALLBACK & DEFAULT RULES (Priority: 99-0)
+# ----------------------------------------------------------------------------
+# Catch-all rules for unmatched requests.
+# Lower priority ensures they only run if no higher-priority rule matches.
+# ----------------------------------------------------------------------------
+
+- name: "external_api_fallback"
+  description: "Fallback to external API when local models unavailable"
+  priority: 50
+  enabled: true
+  conditions:
+    - field: "local_models_available"
+      operator: "eq"
+      value: false
+  action:
+    primary_model: "gpt-3.5-turbo"
+    fallback_model: "claude-3-haiku"
+    secondary_fallback: "grok-beta"
+    routing_strategy: "cost"
+  reason: "Automatic fallback to external APIs when local models are unavailable"
+
+- name: "high_complexity_fallback"
+  description: "Fallback to more capable models for complex prompts"
+  priority: 40
+  enabled: true
+  conditions:
+    - field: "complexity"
+      operator: "gte"
+      value: 0.8
+    - field: "selected_model"
+      operator: "not_in"
+      value: ["gpt-4", "claude-3-sonnet", "claude-3-opus"]
+  action:
+    primary_model: "gpt-4"
+    fallback_model: "claude-3-sonnet"
+    secondary_fallback: "claude-3-opus"
+    routing_strategy: "quality"
+    override_previous: true
+  reason: "High complexity prompts automatically upgraded to more capable models"
+
+- name: "general_purpose"
+  description: "General purpose routing for unmatched requests"
+  priority: 10
+  enabled: true
+  conditions:
+    - field: "always"
+      operator: "eq"
+      value: true
+  action:
+    primary_model: "gpt-3.5-turbo"
+    fallback_model: "mistral-7b-instruct"
+    secondary_fallback: "llama-3.1-8b-instant"
+    routing_strategy: "hybrid"
+  reason: "Default balanced model selection for general purpose tasks"
+
+
+# ----------------------------------------------------------------------------
+# A/B TESTING RULES (Priority: 5000-4000)
+# ----------------------------------------------------------------------------
+# Special rules for A/B testing different models.
+# High priority to override normal routing for test groups.
+# ----------------------------------------------------------------------------
+
+- name: "ab_test_group_a"
+  description: "A/B test group A - Testing Claude 3 Haiku vs GPT-3.5"
+  priority: 5000
+  enabled: false  # Disabled by default, enable for experiments
+  conditions:
+    - field: "user_id"
+      operator: "in"
+      value: ["test_user_1", "test_user_2", "test_user_3", "test_user_4", "test_user_5"]
+    - field: "prompt_type"
+      operator: "eq"
+      value: "qa"
+  action:
+    primary_model: "claude-3-haiku"
+    fallback_model: "gpt-3.5-turbo"
+    routing_strategy: "round_robin"  # Alternate between models
+    ab_test:
+      group: "A"
+      variant: "claude-3-haiku"
+      control: "gpt-3.5-turbo"
+  reason: "A/B test comparing Claude 3 Haiku vs GPT-3.5 for Q&A tasks"
+
+- name: "ab_test_group_b"
+  description: "A/B test group B - Testing Grok Beta vs GPT-3.5"
+  priority: 4999
+  enabled: false
+  conditions:
+    - field: "user_id"
+      operator: "in"
+      value: ["test_user_6", "test_user_7", "test_user_8", "test_user_9", "test_user_10"]
+    - field: "prompt_type"
+      operator: "eq"
+      value: "code"
+  action:
+    primary_model: "grok-beta"
+    fallback_model: "gpt-3.5-turbo"
+    routing_strategy: "round_robin"
+    ab_test:
+      group: "B"
+      variant: "grok-beta"
+      control: "gpt-3.5-turbo"
+  reason: "A/B test comparing Grok Beta vs GPT-3.5 for code generation"
+
+
+# ----------------------------------------------------------------------------
+# MAINTENANCE & EMERGENCY RULES (Priority: 9000-8000)
+# ----------------------------------------------------------------------------
+# Emergency overrides for system maintenance or incidents.
+# Highest priority to ensure system stability.
+# ----------------------------------------------------------------------------
+
+- name: "emergency_model_offline"
+  description: "EMERGENCY: Route away from failing model"
+  priority: 9000
+  enabled: true
+  conditions:
+    - field: "model_status"
+      operator: "eq"
+      value: "offline"
+    - field: "selected_model"
+      operator: "eq"
+      value: "gpt-4"
+  action:
+    primary_model: "claude-3-sonnet"
+    fallback_model: "gpt-3.5-turbo"
+    secondary_fallback: "mistral-7b-instruct"
+    routing_strategy: "adaptive"
+    override_previous: true
+  reason: "EMERGENCY: GPT-4 is offline, routing to Claude 3 Sonnet"
+
+- name: "maintenance_mode"
+  description: "MAINTENANCE: Route all traffic to stable models"
+  priority: 8500
+  enabled: false  # Enable during maintenance windows
+  conditions:
+    - field: "maintenance_window"
+      operator: "eq"
+      value: true
+  action:
+    primary_model: "mistral-7b-instruct"
+    fallback_model: "llama-3.1-8b-instant"
+    secondary_fallback: "gpt-3.5-turbo"
+    routing_strategy: "least_connections"
+  reason: "System maintenance - routing to most stable models"
+
+# ============================================================================
+# END OF ROUTING RULES CONFIGURATION
+# ============================================================================
