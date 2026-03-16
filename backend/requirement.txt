@@ -1,0 +1,332 @@
+# ============================================================================
+# LLM INFERENCE GATEWAY - PRODUCTION DEPENDENCIES
+# ============================================================================
+# This file contains ALL dependencies required for the backend service
+# Version pins are carefully selected for compatibility and security
+# Last updated: 2024
+# ============================================================================
+
+# ============================================================================
+# CORE FRAMEWORK - FastAPI & ASGI Server
+# ============================================================================
+# FastAPI: Modern, fast web framework for building APIs
+fastapi==0.104.1
+# Uvicorn: Lightning-fast ASGI server implementation
+uvicorn[standard]==0.24.0
+# Starlette: Lightweight ASGI framework/toolkit
+starlette==0.27.0
+# Pydantic: Data validation using Python type hints
+pydantic==2.5.0
+pydantic-settings==2.1.0
+pydantic[email]==2.5.0
+# Python-multipart: Multipart form data parser
+python-multipart==0.0.6
+
+# ============================================================================
+# ASYNC SUPPORT
+# ============================================================================
+# Asyncio: Standard library, no install needed
+# AnyIO: High-level asynchronous compatibility layer
+anyio==4.2.0
+# Sniffio: Detect async library in use
+sniffio==1.3.0
+# H11: Pure-Python HTTP/1.1 protocol
+h11==0.14.0
+
+# ============================================================================
+# DATABASE - PostgreSQL ORM & Migrations
+# ============================================================================
+# SQLAlchemy: SQL toolkit and ORM
+sqlalchemy==2.0.23
+# Alembic: Database migration tool
+alembic==1.12.1
+# Asyncpg: PostgreSQL adapter for asyncio
+asyncpg==0.29.0
+# Psycopg2-binary: PostgreSQL adapter (for migrations)
+psycopg2-binary==2.9.9
+# Greenlet: Lightweight coroutines for synchronous code
+greenlet==3.0.1
+
+# ============================================================================
+# CACHE & MESSAGE QUEUE - Redis
+# ============================================================================
+# Redis-py: Python client for Redis
+redis==5.0.1
+# aioredis: Async Redis client (merged into redis-py 4.0+)
+# Using redis-py which now supports asyncio
+
+# ============================================================================
+# HTTP CLIENT - External API Calls
+# ============================================================================
+# HTTPX: Fully featured HTTP client for Python 3
+httpx==0.25.2
+# HTTP Core: Minimal low-level HTTP client
+httpcore==1.0.2
+# Aiohttp: Async HTTP client/server
+aiohttp==3.9.1
+# Requests: HTTP for humans (sync, for scripts)
+requests==2.31.0
+# Urllib3: HTTP client with connection pooling
+urllib3==2.1.0
+
+# ============================================================================
+# AUTHENTICATION & SECURITY
+# ============================================================================
+# Python-jose: JWT implementation
+python-jose[cryptography]==3.3.0
+# Passlib: Password hashing library
+passlib[bcrypt]==1.7.4
+# Bcrypt: Password hashing algorithm
+bcrypt==4.1.2
+# Cryptography: Cryptographic recipes and primitives
+cryptography==41.0.7
+# PyJWT: JSON Web Token implementation
+pyjwt==2.8.0
+
+# ============================================================================
+# MACHINE LEARNING - Core ML Dependencies
+# ============================================================================
+# PyTorch: Deep learning framework (CUDA 11.8)
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==2.1.0
+torchvision==0.16.0
+torchaudio==2.1.0
+# Transformers: State-of-the-art NLP models
+transformers==4.36.0
+# Accelerate: Distributed training and inference
+accelerate==0.25.0
+# Sentence-Transformers: Sentence embeddings
+sentence-transformers==2.2.2
+# Tokenizers: Fast tokenization
+tokenizers==0.15.0
+# Safetensors: Safe tensor serialization
+safetensors==0.4.1
+# HuggingFace Hub: Model repository client
+huggingface-hub==0.20.0
+
+# ============================================================================
+# QUANTIZATION & OPTIMIZATION
+# ============================================================================
+# BitsAndBytes: 4-bit/8-bit quantization
+bitsandbytes==0.41.3
+# Flash-Attention: Optimized attention mechanism
+flash-attn==2.5.0
+# xFormers: Transformers optimization
+xformers==0.0.23
+# Triton: GPU programming language
+triton==2.1.0
+# Optimum: HuggingFace optimization toolkit
+optimum==1.16.1
+
+# ============================================================================
+# MODEL SERVING BACKENDS
+# ============================================================================
+# vLLM: High-throughput LLM serving
+vllm==0.3.0
+# llama-cpp-python: GGUF model inference
+llama-cpp-python==0.2.26
+# CTransformers: GGML/GGUF inference
+ctransformers==0.2.27
+# AutoGPTQ: GPTQ quantization
+auto-gptq==0.5.1
+# AutoAWQ: AWQ quantization
+autoawq==0.1.7
+# ExLlama: ExLlama inference
+exllama==0.0.15
+# ExLlamaV2: ExLlama V2 inference
+exllamav2==0.0.11
+# GGUF: GGUF format utilities
+gguf==0.5.0
+
+# ============================================================================
+# EXTERNAL API CLIENTS
+# ============================================================================
+# OpenAI API client
+openai==1.6.1
+# Anthropic API client
+anthropic==0.7.7
+# Cohere API client
+cohere==4.37
+# Google AI (Gemini) client
+google-generativeai==0.3.2
+# AWS Bedrock client
+boto3==1.34.14
+botocore==1.34.14
+
+# ============================================================================
+# MONITORING & OBSERVABILITY
+# ============================================================================
+# Prometheus client: Metrics collection
+prometheus-client==0.19.0
+# Prometheus FastAPI Instrumentator
+prometheus-fastapi-instrumentator==6.1.0
+# Structured logging
+structlog==23.2.0
+# Python JSON logger
+python-json-logger==2.0.7
+# OpenTelemetry: Distributed tracing
+opentelemetry-api==1.21.0
+opentelemetry-sdk==1.21.0
+opentelemetry-instrumentation-fastapi==0.42b0
+opentelemetry-instrumentation-sqlalchemy==0.42b0
+opentelemetry-exporter-jaeger==1.21.0
+# Grafana API client
+grafana-api==1.0.4
+
+# ============================================================================
+# CONFIGURATION & ENVIRONMENT
+# ============================================================================
+# Python-dotenv: Load environment variables
+python-dotenv==1.0.0
+# PyYAML: YAML parser and emitter
+pyyaml==6.0.1
+# JSON5: JSON with comments support
+json5==0.9.14
+# Tomli: TOML parser (Python 3.11+)
+tomli==2.0.1
+
+# ============================================================================
+# UTILITIES
+# ============================================================================
+# Tenacity: Retry library
+tenacity==8.2.3
+# UUID: Universally unique identifiers
+uuid==1.30
+# Psutil: System monitoring
+psutil==5.9.6
+# GPUtil: GPU monitoring
+gputil==1.4.0
+# Humanize: Human-friendly formatting
+humanize==4.8.0
+# TQDM: Progress bars
+tqdm==4.66.1
+# Colorama: Terminal colors
+colorama==0.4.6
+# Numpy: Scientific computing
+numpy==1.24.3
+# Pandas: Data analysis
+pandas==2.1.4
+# PyArrow: Apache Arrow columnar format
+pyarrow==14.0.1
+
+# ============================================================================
+# CACHE & SIMILARITY
+# ============================================================================
+# Faiss: Efficient similarity search
+faiss-cpu==1.7.4
+# Faiss GPU (optional, uncomment if GPU available)
+# faiss-gpu==1.7.4
+# Scikit-learn: Machine learning utilities
+scikit-learn==1.3.2
+# SciPy: Scientific computing
+scipy==1.11.4
+# Annoy: Approximate nearest neighbors
+annoy==1.17.3
+
+# ============================================================================
+# WEB SOCKETS
+# ============================================================================
+# WebSockets: WebSocket implementation
+websockets==12.0
+# Python-socketio: Socket.IO server
+python-socketio==5.10.0
+
+# ============================================================================
+# TASK QUEUE (Optional)
+# ============================================================================
+# Celery: Distributed task queue
+celery==5.3.4
+# Redis as Celery broker
+redis==5.0.1  # Already included above
+
+# ============================================================================
+# FILE PROCESSING
+# ============================================================================
+# Aiofiles: Async file operations
+aiofiles==23.2.1
+# Pillow: Image processing
+pillow==10.1.0
+# Pdfplumber: PDF text extraction
+pdfplumber==0.10.3
+# Python-pptx: PowerPoint manipulation
+python-pptx==0.6.21
+# Docx2txt: Word document extraction
+docx2txt==0.8
+
+# ============================================================================
+# TESTING
+# ============================================================================
+# Pytest: Testing framework
+pytest==7.4.3
+# Pytest-asyncio: Async test support
+pytest-asyncio==0.21.1
+# Pytest-cov: Coverage reporting
+pytest-cov==4.1.0
+# Pytest-xdist: Parallel test execution
+pytest-xdist==3.5.0
+# Hypothesis: Property-based testing
+hypothesis==6.92.0
+# Factory-boy: Test fixtures
+factory-boy==3.3.0
+# Faker: Fake data generation
+Faker==20.1.0
+# Requests-mock: HTTP request mocking
+requests-mock==1.11.0
+# Respx: Async HTTP mocking
+respx==0.20.1
+
+# ============================================================================
+# DEVELOPMENT TOOLS
+# ============================================================================
+# Black: Code formatter
+black==23.12.1
+# Ruff: Fast Python linter
+ruff==0.1.9
+# MyPy: Static type checking
+mypy==1.7.1
+# Pre-commit: Git hooks
+pre-commit==3.6.0
+# IPython: Interactive Python
+ipython==8.18.1
+# Jupyter: Interactive notebooks
+jupyter==1.0.0
+
+# ============================================================================
+# PRODUCTION SERVER
+# ============================================================================
+# Gunicorn: WSGI HTTP server (for production)
+gunicorn==21.2.0
+# Nginx: Web server (via Docker, not pip)
+
+# ============================================================================
+# MONITORING DASHBOARDS
+# ============================================================================
+# Plotly: Interactive visualizations
+plotly==5.18.0
+# Dash: Web dashboard framework
+dash==2.14.2
+
+# ============================================================================
+# DEPENDENCY VERSION CONSTRAINTS
+# ============================================================================
+# Ensure compatibility
+# numpy<2.0.0
+# torch>=2.0.0,<2.2.0
+# transformers>=4.35.0,<4.37.0
+# fastapi>=0.100.0,<0.105.0
+# pydantic>=2.0.0,<2.6.0
+
+# ============================================================================
+# ALTERNATIVE INSTALLATION METHODS
+# ============================================================================
+# For CUDA 11.8:
+# pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu118
+#
+# For CUDA 12.1:
+# pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+#
+# For CPU-only:
+# pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+#
+# For Flash Attention with CUDA 11.8:
+# pip install flash-attn --no-build-isolation
