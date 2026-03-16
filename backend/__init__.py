@@ -1,1 +1,2 @@
-# __init__.py
+"""Backend package for the LLM inference platform."""
+

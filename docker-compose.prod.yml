@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  backend:
+    restart: always
+    environment:
+      DEBUG: "false"
+      LOG_LEVEL: "INFO"
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 8G
