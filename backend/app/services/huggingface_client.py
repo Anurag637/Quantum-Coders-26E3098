@@ -1,36 +1,43 @@
-import os
 import httpx
 import logging
 from typing import Dict, Any
 
+from backend.app.core.config import get_settings
+
 logger = logging.getLogger(__name__)
+
 
 class HuggingFaceClient:
     def __init__(self):
-        self.api_key = os.getenv("HUGGINGFACE_API_KEY")
+        settings = get_settings()
+        self.settings = settings
+        self.api_key = getattr(settings, "HUGGINGFACE_API_KEY", None)
         if not self.api_key:
-            logger.warning("HUGGINGFACE_API_KEY environment variable not set. Real inference will fail.")
-        
-        self.base_url = "https://api-inference.huggingface.co/models"
+            logger.warning(
+                "HUGGINGFACE_API_KEY is not configured in settings. "
+                "Falling back to mock responses."
+            )
+
+        # Hugging Face has migrated the legacy Inference API to the Router endpoint.
+        # This is an OpenAI-compatible API surface.
+        self.base_url = "https://router.huggingface.co/v1"
 
     async def generate_text(self, model_id: str, prompt: str, max_tokens: int = 100, temperature: float = 0.7) -> Dict[str, Any]:
         """
-        Calls the Hugging Face Inference API for a specific model.
+        Calls Hugging Face Router (OpenAI-compatible chat completions).
         """
-        url = f"{self.base_url}/{model_id}"
+        url = f"{self.base_url}/chat/completions"
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
         
-        # Adjust payload based on standard text-generation / conversational endpoints
         payload = {
-            "inputs": prompt,
-            "parameters": {
-                "max_new_tokens": max_tokens,
-                "temperature": temperature,
-                "return_full_text": False
-            }
+            "model": model_id,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "stream": False,
         }
         
         async with httpx.AsyncClient() as client:
@@ -51,17 +58,31 @@ class HuggingFaceClient:
                 response = await client.post(url, headers=headers, json=payload, timeout=30.0)
                 response.raise_for_status()
                 result = response.json()
-                
-                # Extract text based on standard HF completion format
-                if isinstance(result, list) and len(result) > 0 and 'generated_text' in result[0]:
-                    return {"text": result[0]['generated_text'].strip(), "status": "success"}
-                else:
-                    # Fallback
-                    return {"text": str(result), "status": "success"}
+
+                # OpenAI-compatible chat completion format
+                content = (
+                    result.get("choices", [{}])[0]
+                    .get("message", {})
+                    .get("content", "")
+                )
+                return {"text": content, "status": "success"}
                     
-            except httpx.HTTPStatusError as e:
-                logger.error(f"HF API HTTP error: {e.response.status_code} - {e.response.text}")
-                return {"error": f"API Error: {e.response.status_code}", "status": "error"}
-            except Exception as e:
-                logger.error(f"HF API connection error: {str(e)}")
-                return {"error": f"Connection Error: {str(e)}", "status": "error"}
+            except httpx.HTTPStatusError as exc:
+                status_code = exc.response.status_code
+                body = exc.response.text
+                logger.error("HF API HTTP error: %s - %s", status_code, body)
+
+                # Return detailed error so callers can surface meaningful info in UI.
+                # In non-debug mode, we still keep the payload terse.
+                payload: Dict[str, Any] = {
+                    "status": "error",
+                    "error": f"HF API Error: {status_code}",
+                    "status_code": status_code,
+                }
+                if getattr(self.settings, "DEBUG", False):
+                    payload["details"] = body[:2000]
+                return payload
+            except Exception as exc:
+                logger.error("HF API connection error: %s", exc)
+                payload: Dict[str, Any] = {"status": "error", "error": f"HF Connection Error: {exc}"}
+                return payload

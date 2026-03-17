@@ -12,6 +12,8 @@ from backend.app.core.config import settings
 from backend.app.core.logging import setup_logging
 from backend.app.api.router import api_router
 from backend.app.lifespan import lifespan
+from backend.app.services.groq_client import GroqClient
+from backend.app.services.huggingface_client import HuggingFaceClient
 
 # Resolve frontend directory relative to the project root:
 # main.py is in backend/app/main.py, so we go up 3 levels to reach the root.
@@ -137,6 +139,33 @@ async def version():
 @app.get("/metrics", tags=["Monitoring"])
 async def metrics():
     return generate_latest()
+
+
+@app.get("/debug/providers", include_in_schema=False)
+async def debug_providers():
+    """Debug whether provider keys are loaded (does not expose secrets)."""
+    hf = bool(getattr(settings, "HUGGINGFACE_API_KEY", None))
+    groq = bool(getattr(settings, "GROQ_API_KEY", None))
+    return {"huggingface_key_loaded": hf, "groq_key_loaded": groq}
+
+
+@app.get("/debug/provider-clients", include_in_schema=False)
+async def debug_provider_clients():
+    """
+    Confirms what the *clients* see (no secrets exposed).
+    If Groq still returns mock despite key_loaded=true, this will reveal it.
+    """
+    groq_client = GroqClient()
+    hf_client = HuggingFaceClient()
+
+    groq_key = groq_client.api_key or ""
+    hf_key = hf_client.api_key or ""
+    return {
+        "groq_client_key_loaded": bool(groq_key),
+        "groq_client_key_prefix": groq_key[:4] if groq_key else None,
+        "hf_client_key_loaded": bool(hf_key),
+        "hf_client_key_prefix": hf_key[:3] if hf_key else None,
+    }
 
 
 # ===============================

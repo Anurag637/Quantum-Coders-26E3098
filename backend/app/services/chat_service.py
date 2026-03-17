@@ -10,16 +10,19 @@ from backend.app.schemas.chat import (
     ChatMessage,
 )
 from backend.app.services.huggingface_client import HuggingFaceClient
+from backend.app.services.groq_client import GroqClient
 
 
 import time
 import json
 from backend.app.persistence.models import InferenceLog
 
+
 class ChatService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.hf_client = HuggingFaceClient()
+        self.groq_client = GroqClient()
 
     async def generate_response(
         self,
@@ -29,15 +32,29 @@ class ChatService:
     ) -> ChatResponse:
         start_time = time.time()
         
-        # Flatten messages into a single prompt string
+        # Flatten messages into a single prompt string for HF-style models
         prompt = self._build_prompt(request.messages)
 
-        result = await self.hf_client.generate_text(
-            model_id=model_name,
-            prompt=prompt,
-            max_tokens=request.max_tokens,
-            temperature=request.temperature,
-        )
+        if model_name.startswith("groq/"):
+            # Groq models use chat-style messages and an OpenAI-compatible API.
+            groq_model = model_name.split("/", 1)[1]
+            messages_payload = [
+                {"role": m.role, "content": m.content} for m in request.messages
+            ]
+            result = await self.groq_client.chat_completion(
+                model=groq_model,
+                messages=messages_payload,
+                max_tokens=request.max_tokens,
+                temperature=request.temperature,
+            )
+        else:
+            # Default to Hugging Face text-generation endpoint
+            result = await self.hf_client.generate_text(
+                model_id=model_name,
+                prompt=prompt,
+                max_tokens=request.max_tokens,
+                temperature=request.temperature,
+            )
 
         latency_ms = (time.time() - start_time) * 1000
         response_text = result.get("text", "") if result["status"] == "success" else "Error generating response."

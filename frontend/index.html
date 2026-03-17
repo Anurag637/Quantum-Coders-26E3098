@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qchat | AI Gateway</title>
+    <meta name="description" content="Projexa LLM Inference Gateway — intelligent routing, real-time metrics, and model registry for open-source LLMs.">
+    <!-- When served from /app, use absolute path so CSS is loaded correctly -->
+    <link rel="stylesheet" href="/frontend/style.css?v=1">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                    <path d="M2 17l10 5 10-5"></path>
+                    <path d="M2 12l10 5 10-5"></path>
+                </svg>
+                Projexa
+            </div>
+            <nav>
+                <a href="#" class="nav-link active" data-tab="playground" id="nav-playground">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                    </svg>
+                    Playground
+                </a>
+                <a href="#" class="nav-link" data-tab="metrics" id="nav-metrics">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    Metrics
+                </a>
+                <a href="#" class="nav-link" data-tab="models" id="nav-models">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    </svg>
+                    Models Registry
+                </a>
+            </nav>
+            <div class="system-status">
+                <div class="status-indicator" id="status-dot"></div>
+                <span id="health-status">Checking Systems...</span>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+
+            <!-- ===================== PLAYGROUND TAB ===================== -->
+            <div class="tab-panel active" id="tab-playground">
+                <header>
+                    <h1>Inference Routing</h1>
+                    <p>Observe how different prompt profiles get dynamically routed to optimal open-source models based on complexity, speed, and cost.</p>
+                </header>
+                <div class="playground-layout">
+                    <!-- Prompt Builder -->
+                    <div class="panel prompt-panel">
+                        <h3>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            Input Prompt
+                        </h3>
+                        <textarea id="prompt-input" placeholder="Type your prompt here...&#10;&#10;Examples:&#10;- 'Write a Python script to parse JSON' (Complex → Mistral)&#10;- 'What is the capital of France?' (Simple → Gemma)"></textarea>
+                        <div class="controls">
+                            <div class="control-group">
+                                <label>Max Tokens</label>
+                                <input type="number" id="max-tokens" value="200" min="10" max="2000">
+                            </div>
+                            <div class="control-group">
+                                <label>Temperature</label>
+                                <input type="number" id="temperature" value="0.7" min="0" max="1" step="0.1">
+                            </div>
+                            <div class="control-group" style="flex: 2;">
+                                <label>Force Model</label>
+                                <select id="preferred-model">
+                                    <option value="">🎯 Auto-Route (Intelligent)</option>
+                                    <option value="google/gemma-7b-it">⚡ Google Gemma 7B</option>
+                                    <option value="mistralai/Mistral-7B-Instruct-v0.2">🧠 Mistral 7B Instruct</option>
+                                    <option value="meta-llama/Llama-2-7b-chat-hf">🦙 Meta LLaMA 2 7B</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button id="submit-btn" class="primary-btn">
+                            <span>Execute Request</span>
+                        </button>
+                    </div>
+
+                    <!-- Results Panel -->
+                    <div class="panel results-panel">
+                        <h3>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                            Execution Results
+                        </h3>
+                        <div id="loading" class="hidden">
+                            <div class="spinner"></div>
+                            <span>Routing Request...</span>
+                        </div>
+                        <div id="results-empty" class="empty-state">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                            <p>Submit a prompt to see routing results</p>
+                        </div>
+                        <div id="results-content" class="hidden">
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <h4>Selected Model</h4>
+                                    <span id="res-model" class="highlight"></span>
+                                </div>
+                                <div class="metric-card">
+                                    <h4>Routing Strategy</h4>
+                                    <span id="res-strategy" class="badge"></span>
+                                </div>
+                                <div class="metric-card">
+                                    <h4>Latency</h4>
+                                    <span id="res-latency" class="value"></span>
+                                </div>
+                                <div class="metric-card">
+                                    <h4>Cost Est.</h4>
+                                    <span id="res-cost" class="value"></span>
+                                </div>
+                            </div>
+                            <div class="response-box">
+                                <h4>Generation Output</h4>
+                                <p id="res-text"></p>
+                            </div>
+                            <div class="debug-info">
+                                <details>
+                                    <summary>Show Alternate Pipeline Candidates</summary>
+                                    <ul id="res-alternatives"></ul>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== METRICS TAB ===================== -->
+            <div class="tab-panel hidden" id="tab-metrics">
+                <header>
+                    <h1>System Metrics</h1>
+                    <p>Real-time observability — request volumes, latency, error rates, and per-model performance.</p>
+                </header>
+                <div class="metrics-page">
+                    <div class="metrics-controls">
+                        <button id="refresh-metrics-btn" class="secondary-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="metrics-loading" class="hidden" style="text-align:center;padding:40px;">
+                        <div class="spinner"></div><span style="margin-left:12px">Loading metrics...</span>
+                    </div>
+                    <div id="metrics-content">
+                        <div class="metrics-overview-grid" id="metrics-overview"></div>
+                        <div class="panel" style="margin-top:24px;">
+                            <h3>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                Per-Model Performance
+                            </h3>
+                            <div id="per-model-stats" class="model-stats-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===================== MODELS REGISTRY TAB ===================== -->
+            <div class="tab-panel hidden" id="tab-models">
+                <header>
+                    <h1>Models Registry</h1>
+                    <p>All models registered in the inference gateway, with tier, capabilities, and cost info.</p>
+                </header>
+                <div id="models-loading" class="hidden" style="text-align:center;padding:40px;">
+                    <div class="spinner"></div><span style="margin-left:12px">Loading models...</span>
+                </div>
+                <div id="models-grid" class="models-registry-grid"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Same for JS bundle -->
+    <script src="/frontend/app.js?v=1"></script>
+</body>
+</html>

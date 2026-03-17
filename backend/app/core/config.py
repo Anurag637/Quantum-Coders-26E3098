@@ -42,6 +42,14 @@ class Settings(BaseSettings):
     API_KEY_HEADER_NAME: str = "X-API-Key"
 
     # ===============================
+    # Provider API Keys
+    # ===============================
+
+    # Optional: if unset, providers run in "mock" mode
+    HUGGINGFACE_API_KEY: Optional[str] = None
+    GROQ_API_KEY: Optional[str] = None
+
+    # ===============================
     # Database
     # ===============================
 

@@ -1,0 +1,15 @@
+=== EXCEPTION ROOT ===
+ModuleNotFoundError("No module named 'app.services.model_service'")
+=== TRACE ===
+Traceback (most recent call last):
+  File "C:\Users\Anurag Pandey\OneDrive\Desktop\Projexa\llm-inference-platform\test_imports.py", line 2, in <module>
+    import backend.app.main
+  File "C:\Users\Anurag Pandey\OneDrive\Desktop\Projexa\llm-inference-platform\backend\app\main.py", line 12, in <module>
+    from app.api.router import api_router
+  File "C:\Users\Anurag Pandey\OneDrive\Desktop\Projexa\llm-inference-platform\backend\app\api\router.py", line 3, in <module>
+    from app.api.v1.router import router as v1_router
+  File "C:\Users\Anurag Pandey\OneDrive\Desktop\Projexa\llm-inference-platform\backend\app\api\v1\router.py", line 3, in <module>
+    from app.api.v1.endpoints import (
+  File "C:\Users\Anurag Pandey\OneDrive\Desktop\Projexa\llm-inference-platform\backend\app\api\v1\endpoints\models.py", line 5, in <module>
+    from app.services.model_service import ModelService
+ModuleNotFoundError: No module named 'app.services.model_service'
