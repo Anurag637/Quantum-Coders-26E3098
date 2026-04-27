@@ -12,6 +12,8 @@ class HuggingFaceClient:
         settings = get_settings()
         self.settings = settings
         self.api_key = getattr(settings, "HUGGINGFACE_API_KEY", None)
+        if self.api_key:
+            self.api_key = self.api_key.strip()
         if not self.api_key:
             logger.warning(
                 "HUGGINGFACE_API_KEY is not configured in settings. "
@@ -22,7 +24,7 @@ class HuggingFaceClient:
         # This is an OpenAI-compatible API surface.
         self.base_url = "https://router.huggingface.co/v1"
 
-    async def generate_text(self, model_id: str, prompt: str, max_tokens: int = 100, temperature: float = 0.7) -> Dict[str, Any]:
+    async def generate_text(self, model_id: str, prompt: str, max_tokens: int = 1024, temperature: float = 0.7) -> Dict[str, Any]:
         """
         Calls Hugging Face Router (OpenAI-compatible chat completions).
         """

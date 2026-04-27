@@ -1,0 +1,11 @@
+.venv
+venv
+__pycache__
+*.pyc
+.vscode
+.env
+*.db
+infrastructure
+start.bat
+LICENSE
+frontend

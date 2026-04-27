@@ -1,0 +1,27 @@
+# Virtual environments
+.venv/
+venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment variables (contains API keys!)
+.env
+
+# SQLite database
+*.db
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Vercel
+.vercel/
+
+.vercel

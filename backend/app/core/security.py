@@ -99,3 +99,23 @@ def verify_api_key(plain_key: str, hashed_key: str) -> bool:
     Verify provided API key against stored hash.
     """
     return pwd_context.verify(plain_key, hashed_key)
+
+
+from fastapi import Security, HTTPException, status
+from fastapi.security.api_key import APIKeyHeader
+
+api_key_header = APIKeyHeader(name=settings.API_KEY_HEADER_NAME, auto_error=False)
+
+async def get_api_key(api_key_header: str = Security(api_key_header)):
+    if not api_key_header:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="API Key missing"
+        )
+    # Dev mock key validation
+    if api_key_header != "dev_key":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid API Key"
+        )
+    return api_key_header

@@ -19,6 +19,8 @@ class GroqClient:
         # Read from central settings (.env is already loaded there)
         settings = get_settings()
         self.api_key = getattr(settings, "GROQ_API_KEY", None)
+        if self.api_key:
+            self.api_key = self.api_key.strip()
         if not self.api_key:
             logger.warning(
                 "GROQ_API_KEY environment variable not set. "

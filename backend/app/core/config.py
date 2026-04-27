@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     # Security
     # ===============================
 
-    SECRET_KEY: str = Field(..., description="JWT secret key")
+    SECRET_KEY: str = Field(default="change-me-in-production", description="JWT secret key")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     # Database
     # ===============================
 
-    DATABASE_URL: str = Field(..., description="Async database URL")
+    DATABASE_URL: str = Field(default="sqlite+aiosqlite:///", description="Async database URL (defaults to in-memory SQLite)")
 
     # ===============================
     # Redis
@@ -81,7 +81,7 @@ class Settings(BaseSettings):
     DEFAULT_MODEL: str = "mistral-7b-instruct"
     ENABLE_STREAMING: bool = True
     MAX_TOKENS_DEFAULT: int = 1024
-    MAX_TOKENS_LIMIT: int = 4096
+    MAX_TOKENS_LIMIT: int = 8192
     MODEL_DIR: str = "models"
 
 

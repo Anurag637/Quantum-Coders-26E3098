@@ -1,6 +1,5 @@
-const isLocalFile = window.location.protocol === "file:";
-const API_BASE = isLocalFile ? "http://localhost:8000/api/v1" : `${window.location.origin}/api/v1`;
-const API_ROOT = isLocalFile ? "http://localhost:8000" : window.location.origin;
+const API_BASE = `${window.location.origin}/api/v1`;
+const API_ROOT = window.location.origin;
 const API_KEY = "dev_key";
 
 // ============================
